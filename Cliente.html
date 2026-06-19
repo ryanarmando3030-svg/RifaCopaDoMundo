@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifa Copa do Mundo - Status dos Números</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pitch-dark: #07210f;
+    --pitch: #0b3d22;
+    --pitch-light: #145c33;
+    --gold: #ffd700;
+    --gold-dark: #c9a800;
+    --navy: #0a1f44;
+    --navy-light: #14305f;
+    --cream: #f4efdd;
+    --sold-red: #b3262a;
+    --sold-border: #e0433f;
+    --muted: #9fb3a6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 40px, transparent 40px 80px),
+      radial-gradient(circle at top, var(--pitch-light) 0%, var(--pitch-dark) 65%);
+    color: var(--cream);
+    font-family: 'Oswald', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header {
+    text-align: center;
+    padding: 44px 20px 20px;
+    border-bottom: 2px solid rgba(255,215,0,0.15);
+    position: relative;
+  }
+  header p.eyebrow {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 5px;
+    color: var(--gold); margin-bottom: 10px; font-weight: 600;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', 'Georgia', serif;
+    font-size: 3.4rem; letter-spacing: 2px;
+    color: var(--cream);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  }
+  header h1 .accent { color: var(--gold); }
+  header .subtitle { font-size: 0.92rem; color: var(--muted); margin-top: 8px; }
+  header .ball { font-size: 1.6rem; margin: 0 8px; }
+
+  .controls {
+    display: flex; justify-content: center; gap: 40px; margin: 26px auto 30px;
+    background: rgba(10, 31, 68, 0.45); padding: 20px 28px; border-radius: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.25); backdrop-filter: blur(10px); max-width: 520px;
+  }
+  .stat-item { text-align: center; }
+  .stat-val { font-size: 1.9rem; font-weight: bold; color: var(--gold); font-family: 'Bebas Neue', serif; letter-spacing: 1px; }
+  .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+
+  .sync-note {
+    text-align: center; font-size: 0.75rem; color: var(--muted); margin-bottom: 18px;
+  }
+  .sync-note.error { color: #ff9b9b; }
+  .sync-note.live { color: #8fe3a8; }
+
+  .search-container { max-width: 1000px; margin: 0 auto 20px; padding: 0 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+  .search-box {
+    flex: 1; min-width: 220px; background: rgba(10, 31, 68, 0.55); border: 1px solid var(--navy-light);
+    border-radius: 8px; padding: 13px 18px; color: var(--cream); font-size: 0.95rem; outline: none;
+    font-family: 'Oswald', sans-serif;
+  }
+  .search-box:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+
+  .filter-radio-group { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: var(--muted); }
+  .radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .radio-label input { cursor: pointer; accent-color: var(--gold); }
+
+  .legend { display: flex; justify-content: center; gap: 22px; font-size: 0.85rem; margin-bottom: 24px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .box { width: 16px; height: 16px; border-radius: 4px; }
+  .box.livre { background: var(--pitch); border: 1px solid var(--gold-dark); }
+  .box.pago { background: var(--sold-red); border: 1px solid var(--sold-border); }
+
+  .grid-container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; }
+
+  .num-card {
+    background: var(--pitch); border: 1px solid var(--gold-dark); border-radius: 6px;
+    aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center;
+    align-items: center; user-select: none; transition: all 0.18s; cursor: pointer;
+  }
+  .num-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,215,0,0.18); }
+  .num-id { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Bebas Neue', monospace; letter-spacing: 1px; }
+  .num-status { font-size: 0.6rem; color: #7e9588; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .num-card.sold { background: var(--sold-red); border-color: var(--sold-border); }
+  .num-card.sold .num-status { color: rgba(255,255,255,0.55); }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(2,8,4,0.88); backdrop-filter: blur(5px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; padding: 20px;
+  }
+  .overlay.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--navy); border: 1px solid var(--gold);
+    box-shadow: 0 10px 35px rgba(0,0,0,0.75); width: 100%; max-width: 380px;
+    border-radius: 10px; padding: 28px; text-align: center; position: relative;
+  }
+  .modal-close { position: absolute; top: 12px; right: 16px; background: transparent; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; }
+  .modal h2 { font-family: 'Bebas Neue', serif; color: var(--gold); margin-bottom: 16px; font-size: 1.8rem; letter-spacing: 1px; }
+  .buyer-info-box {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,215,0,0.25);
+    border-radius: 6px; padding: 16px; margin-top: 10px; font-size: 1.1rem; font-weight: 600;
+  }
+  .buyer-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 6px; }
+
+  footer { text-align: center; color: #4d6256; font-size: 0.75rem; margin-top: 50px; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Consulta Pública</p>
+  <h1>🏆 Rifa <span class="accent">Copa do Mundo</span> ⚽</h1>
+  <div class="subtitle">Escolha os seus números preferidos e veja quem já garantiu os seus!</div>
+</header>
+
+<div class="controls">
+  <div class="stat-item"><div id="stat-total" class="stat-val">1000</div><div class="stat-lbl">Números</div></div>
+  <div class="stat-item"><div id="stat-sold" class="stat-val">0</div><div class="stat-lbl">Reservados</div></div>
+  <div class="stat-item"><div id="stat-available" class="stat-val">1000</div><div class="stat-lbl">Disponíveis</div></div>
+</div>
+
+<div id="sync-note" class="sync-note">Conectando...</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="box livre"></div> Disponível</div>
+  <div class="legend-item"><div class="box pago"></div> Reservado / Ocupado</div>
+</div>
+
+<div class="search-container">
+  <input type="text" id="search-box" class="search-box" placeholder="⚽ Buscar por número ou nome do comprador..." oninput="handleSearch()">
+  <div class="filter-radio-group">
+    <label class="radio-label"><input type="radio" name="searchMode" value="all" checked onchange="handleSearch()"> Todos</label>
+    <label class="radio-label"><input type="radio" name="searchMode" value="available" onchange="handleSearch()"> Disponível</label>
+    <label class="radio-label"><input type="radio" name="searchMode" value="sold" onchange="handleSearch()"> Vendido</label>
+  </div>
+</div>
+
+<div class="grid-container">
+  <div id="numbers-grid" class="grid"></div>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal(null, true)">&times;</button>
+    <h2 id="modal-title">Número #000</h2>
+    <div class="buyer-label">Status do Número</div>
+    <div id="modal-status-text" style="font-weight: 600; margin-bottom: 15px;">Disponível</div>
+    <div id="buyer-display-section" style="display: none;">
+      <div class="buyer-label">Comprador</div>
+      <div id="buyer-name-text" class="buyer-info-box">Nome da Pessoa</div>
+    </div>
+  </div>
+</div>
+
+<footer>Rifa Copa do Mundo &copy; Atualizado em Tempo Real</footer>
+
+<script>
+// =========================================================================
+// CONFIGURAÇÃO DO FIREBASE (sem token secreto — só a URL pública do banco)
+// Veja o passo a passo no arquivo LEIA-ME.txt para criar a sua em 5 minutos.
+// =========================================================================
+const FIREBASE_URL = 'https://rifa-ed274-default-rtdb.firebaseio.com';
+// =========================================================================
+
+let rifaData = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+    buildGrid();
+    loadFromFirebase();
+    setInterval(loadFromFirebase, 15000); // atualiza sozinho a cada 15s
+});
+
+function buildGrid() {
+    const grid = document.getElementById('numbers-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.createElement('div');
+        card.className = 'num-card';
+        card.id = `card-${numStr}`;
+        card.setAttribute('onclick', `openModal('${numStr}')`);
+
+        const idSpan = document.createElement('span');
+        idSpan.className = 'num-id';
+        idSpan.textContent = numStr;
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'num-status';
+        statusSpan.textContent = 'Disponível';
+
+        card.appendChild(idSpan);
+        card.appendChild(statusSpan);
+        grid.appendChild(card);
+    }
+}
+
+function setSyncNote(type, text) {
+    const el = document.getElementById('sync-note');
+    el.className = `sync-note ${type}`;
+    el.textContent = text;
+}
+
+async function loadFromFirebase() {
+    if (FIREBASE_URL.includes('SEU-PROJETO')) {
+        setSyncNote('error', '⚠️ Configure a URL do Firebase no topo do script (veja LEIA-ME.txt).');
+        return;
+    }
+    try {
+        const response = await fetch(`${FIREBASE_URL}/rifaData.json`);
+        if (!response.ok) throw new Error('Falha ao consultar o Firebase');
+        const json = await response.json();
+        rifaData = json || {};
+        renderData();
+        setSyncNote('live', '🟢 Dados ao vivo — atualizando automaticamente.');
+    } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        setSyncNote('error', '⚠️ Não foi possível atualizar agora. Tentando novamente em instantes...');
+    }
+}
+
+function renderData() {
+    let soldCount = 0;
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.getElementById(`card-${numStr}`);
+        if (!card) continue;
+        const statusSpan = card.querySelector('.num-status');
+        if (rifaData[numStr]) {
+            card.classList.add('sold');
+            statusSpan.textContent = 'Ocupado';
+            soldCount++;
+        } else {
+            card.classList.remove('sold');
+            statusSpan.textContent = 'Disponível';
+        }
+    }
+    document.getElementById('stat-sold').textContent = soldCount;
+    document.getElementById('stat-available').textContent = 1000 - soldCount;
+    handleSearch();
+}
+
+function handleSearch() {
+    const searchVal = document.getElementById('search-box').value.toLowerCase().trim();
+    const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.getElementById(`card-${numStr}`);
+        if (!card) continue;
+        const isSold = !!rifaData[numStr];
+
+        let matchesMode = true;
+        if (searchMode === 'available' && isSold) matchesMode = false;
+        if (searchMode === 'sold' && !isSold) matchesMode = false;
+
+        let matchesSearch = true;
+        if (searchVal) {
+            const numMatch = numStr.includes(searchVal);
+            const nameMatch = isSold && rifaData[numStr].name.toLowerCase().includes(searchVal);
+            matchesSearch = (numMatch || nameMatch);
+        }
+
+        card.style.display = (matchesMode && matchesSearch) ? 'flex' : 'none';
+    }
+}
+
+function openModal(numStr) {
+    document.getElementById('modal-title').textContent = `Número #${numStr}`;
+    const statusText = document.getElementById('modal-status-text');
+    const buyerSection = document.getElementById('buyer-display-section');
+    const buyerNameText = document.getElementById('buyer-name-text');
+
+    if (rifaData[numStr]) {
+        statusText.textContent = 'Reservado / Ocupado';
+        statusText.style.color = '#ff9999';
+        buyerNameText.textContent = rifaData[numStr].name;
+        buyerSection.style.display = 'block';
+    } else {
+        statusText.textContent = 'Disponível para Compra!';
+        statusText.style.color = '#a3e6be';
+        buyerSection.style.display = 'none';
+    }
+    document.getElementById('overlay').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('overlay').classList.remove('active');
+}
+</script>
+</body>
+</html>

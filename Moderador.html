@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rifa Copa do Mundo - Painel do Administrador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pitch-dark: #07210f;
+    --pitch: #0b3d22;
+    --pitch-light: #145c33;
+    --gold: #ffd700;
+    --gold-dark: #c9a800;
+    --navy: #0a1f44;
+    --navy-light: #14305f;
+    --cream: #f4efdd;
+    --sold-red: #b3262a;
+    --sold-border: #e0433f;
+    --muted: #9fb3a6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 40px, transparent 40px 80px),
+      radial-gradient(circle at top, var(--pitch-light) 0%, var(--pitch-dark) 65%);
+    color: var(--cream);
+    font-family: 'Oswald', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header { text-align: center; padding: 40px 20px 20px; }
+  header p.eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 5px; color: var(--gold); margin-bottom: 8px; font-weight: 600; }
+  header h1 { font-family: 'Bebas Neue', serif; font-size: 3.2rem; letter-spacing: 2px; color: var(--cream); text-shadow: 0 2px 10px rgba(0,0,0,0.6); }
+  header h1 .accent { color: var(--gold); }
+  header .subtitle { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
+
+  .storage-box { max-width: 1000px; margin: 0 auto 20px; padding: 0 20px; }
+  .status-banner {
+    padding: 15px 20px; border-radius: 8px; font-size: 0.88rem; font-weight: 500;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 20px; border: 1px solid transparent; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .status-banner.error { background: rgba(179, 38, 42, 0.18); border-color: var(--sold-border); color: #ff9999; }
+  .status-banner.warning { background: rgba(255, 215, 0, 0.08); border-color: var(--gold); color: var(--gold); }
+  .status-banner.success { background: rgba(20, 92, 51, 0.35); border-color: var(--gold-dark); color: #a3e6be; }
+  .banner-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .banner-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: var(--cream);
+    padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+  }
+  .banner-btn:hover { background: rgba(255,255,255,0.15); }
+
+  .controls {
+    display: flex; justify-content: center; gap: 40px; margin-bottom: 30px;
+    background: rgba(10, 31, 68, 0.45); padding: 20px; border-radius: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.25); backdrop-filter: blur(10px);
+    max-width: 520px; margin-left: auto; margin-right: auto;
+  }
+  .stat-item { text-align: center; }
+  .stat-val { font-size: 1.85rem; font-weight: bold; color: var(--gold); font-family: 'Bebas Neue', serif; }
+  .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+
+  .search-container { max-width: 1000px; margin: 0 auto 18px; padding: 0 20px; display: flex; gap: 15px; flex-wrap: wrap; }
+  .search-box {
+    flex: 1; min-width: 220px; background: rgba(10, 31, 68, 0.55); border: 1px solid var(--navy-light);
+    border-radius: 8px; padding: 12px 16px; color: var(--cream); font-size: 0.95rem; outline: none;
+  }
+  .search-box:focus { border-color: var(--gold); box-shadow: 0 0 8px rgba(255,215,0,0.2); }
+
+  .filter-radio-group { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: var(--muted); }
+  .radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .radio-label input { cursor: pointer; accent-color: var(--gold); }
+
+  .toolbar-row { max-width: 1000px; margin: 0 auto 20px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .nav-tabs { display: flex; gap: 5px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 6px; border: 1px solid rgba(255,215,0,0.2); }
+  .tab-btn { background: transparent; border: none; color: var(--muted); padding: 8px 16px; font-size: 0.9rem; font-weight: 500; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active { background: var(--gold-dark); color: var(--pitch-dark); font-weight: 700; }
+  .quick-filters { display: flex; gap: 8px; }
+  .filter-btn { background: rgba(10, 31, 68, 0.5); border: 1px solid rgba(255,215,0,0.25); color: var(--muted); padding: 6px 14px; font-size: 0.8rem; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+  .filter-btn:hover { border-color: var(--gold); color: var(--cream); }
+  .filter-btn.active { background: var(--gold); border-color: var(--gold); color: var(--pitch-dark); font-weight: 600; }
+
+  .grid-container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; }
+  .num-card {
+    background: var(--pitch); border: 1px solid var(--gold-dark); border-radius: 6px;
+    aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    cursor: pointer; transition: all 0.2s ease; position: relative; user-select: none;
+  }
+  .num-card:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 4px 10px rgba(255,215,0,0.15); }
+  .num-id { font-size: 1.15rem; font-weight: 700; color: var(--cream); font-family: 'Bebas Neue', monospace; letter-spacing: 1px; }
+  .num-status { font-size: 0.6rem; color: #7e9588; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .num-card.sold { background: var(--sold-red); border-color: var(--sold-border); }
+  .num-card.sold .num-id { color: rgba(255,255,255,0.9); }
+  .num-card.sold .num-status { color: rgba(255,255,255,0.55); }
+
+  .admin-view, .raffle-view { max-width: 1000px; margin: 0 auto; padding: 0 20px; display: none; }
+  .admin-card { background: rgba(10, 31, 68, 0.4); border: 1px solid rgba(255,215,0,0.2); border-radius: 8px; padding: 25px; margin-bottom: 20px; }
+  .admin-card h3 { font-family: 'Bebas Neue', serif; margin-bottom: 15px; color: var(--gold); font-size: 1.5rem; letter-spacing: 1px; }
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 1px; padding: 12px 10px; border-bottom: 2px solid rgba(255,215,0,0.25); }
+  td { padding: 12px 10px; border-bottom: 1px solid rgba(255,215,0,0.08); color: var(--cream); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .actions-cell { display: flex; gap: 8px; }
+  .btn-action { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: var(--cream); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s; }
+  .btn-action:hover { background: rgba(255,255,255,0.12); }
+  .btn-action.danger:hover { background: var(--sold-red); border-color: var(--sold-border); }
+
+  .raffle-container {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(10, 31, 68, 0.5); border: 1px solid var(--gold); border-radius: 14px;
+    padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 560px; margin: 20px auto;
+  }
+  .raffle-container h3 { font-family: 'Bebas Neue', serif; font-size: 1.8rem; letter-spacing: 1px; color: var(--gold); }
+  .display-drawn {
+    width: 180px; height: 180px; border-radius: 50%; background: #050e08; border: 4px dashed var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 3.4rem; font-family: 'Bebas Neue', monospace;
+    font-weight: bold; color: var(--cream); margin: 25px 0; text-shadow: 0 0 15px rgba(255,215,0,0.4); transition: all 0.2s ease;
+  }
+  .display-drawn.spinning { animation: pulse-border 0.3s infinite alternate; border-style: solid; color: var(--gold); }
+  .winner-box { background: rgba(255,255,255,0.04); border: 1px solid var(--gold-dark); padding: 15px 25px; border-radius: 8px; margin-top: 15px; width: 100%; display: none; }
+  .winner-box h4 { color: var(--gold); font-size: 1.25rem; margin-bottom: 5px; font-family: 'Bebas Neue', serif; letter-spacing: 1px; }
+  @keyframes pulse-border { from { transform: scale(1); border-color: var(--gold); } to { transform: scale(1.03); border-color: var(--cream); } }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(2,8,4,0.88); backdrop-filter: blur(5px);
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease; padding: 20px;
+  }
+  .overlay.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--navy); border: 1px solid var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    width: 100%; max-width: 420px; border-radius: 10px; padding: 25px; position: relative;
+    transform: scale(0.9); transition: transform 0.25s ease;
+  }
+  .overlay.active .modal { transform: scale(1); }
+  .modal-close { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; line-height: 1; }
+  .modal-close:hover { color: var(--cream); }
+  .modal h2 { font-family: 'Bebas Neue', serif; margin-bottom: 5px; color: var(--gold); font-size: 1.7rem; letter-spacing: 1px; }
+  .modal .modal-subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--navy-light); border-radius: 4px; padding: 10px 12px; color: var(--cream); font-size: 0.95rem; outline: none; }
+  .form-control:focus { border-color: var(--gold); }
+  .modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
+  .btn-prime { flex: 1; background: var(--gold); color: var(--pitch-dark); border: none; padding: 12px; font-weight: 700; border-radius: 4px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
+  .btn-prime:hover { background: var(--gold-dark); }
+  .btn-prime:disabled { background: #4a4530 !important; color: #7a7361 !important; cursor: not-allowed; }
+  .btn-sec { flex: 1; background: transparent; color: var(--muted); border: 1px solid rgba(255,215,0,0.3); padding: 12px; font-weight: 500; border-radius: 4px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
+  .btn-sec:hover { border-color: var(--gold); color: var(--cream); }
+
+  /* Tela de bloqueio (PIN) */
+  #lock-screen {
+    position: fixed; inset: 0; background: var(--pitch-dark); z-index: 2000;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+  }
+  #lock-screen h2 { font-family: 'Bebas Neue', serif; color: var(--gold); font-size: 2rem; letter-spacing: 1px; }
+  #lock-screen input { width: 220px; text-align: center; letter-spacing: 6px; font-size: 1.2rem; }
+  #lock-msg { color: #ff9999; font-size: 0.85rem; min-height: 18px; }
+
+  footer { text-align: center; color: #4d6256; font-size: 0.75rem; margin-top: 50px; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<div id="lock-screen">
+  <h2>🔒 Painel do Administrador</h2>
+  <p style="color: var(--muted); font-size: 0.85rem;">Digite o PIN de acesso para continuar</p>
+  <input type="password" id="pin-input" class="form-control" placeholder="PIN" maxlength="12" autocomplete="off">
+  <button class="btn-prime" style="max-width: 220px;" onclick="checkPin()">Entrar</button>
+  <div id="lock-msg"></div>
+</div>
+
+<header>
+  <p class="eyebrow">Painel de Controle</p>
+  <h1>🏆 Rifa <span class="accent">Copa do Mundo</span> ⚽</h1>
+  <div class="subtitle">Mil números, um sorteio. Gerencie vendas e realize o sorteio oficial.</div>
+</header>
+
+<div class="storage-box">
+  <div id="status-banner" class="status-banner error">
+    <span id="status-text">Conectando ao banco de dados...</span>
+    <div class="banner-buttons">
+      <button class="banner-btn" onclick="forceSync()">🔄 Sincronizar Manual</button>
+      <button class="banner-btn" id="btn-link-file" onclick="chooseExportFile()">📂 Vincular dados.txt</button>
+      <button class="banner-btn" onclick="exportBackupData()">💾 Exportar dados.txt</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="stat-item"><div id="stat-total" class="stat-val">1000</div><div class="stat-lbl">Números</div></div>
+  <div class="stat-item"><div id="stat-sold" class="stat-val">0</div><div class="stat-lbl">Vendidos</div></div>
+  <div class="stat-item"><div id="stat-available" class="stat-val">1000</div><div class="stat-lbl">Disponíveis</div></div>
+</div>
+
+<div id="search-container-wrapper" class="search-container">
+  <input type="text" id="search-box" class="search-box" placeholder="⚽ Buscar por nome ou número..." oninput="handleSearch()">
+  <div class="filter-radio-group">
+    <label class="radio-label"><input type="radio" name="searchMode" value="all" checked onchange="handleSearch()"> Todos</label>
+    <label class="radio-label"><input type="radio" name="searchMode" value="available" onchange="handleSearch()"> Disponível</label>
+    <label class="radio-label"><input type="radio" name="searchMode" value="sold" onchange="handleSearch()"> Vendido</label>
+  </div>
+</div>
+
+<div class="toolbar-row">
+  <div class="nav-tabs">
+    <button id="tab-grid" class="tab-btn active" onclick="switchView('grid')">Painel de números</button>
+    <button id="tab-admin" class="tab-btn" onclick="switchView('admin')">Administração</button>
+    <button id="tab-raffle" class="tab-btn" onclick="switchView('raffle')">🏆 Realizar Sorteio</button>
+  </div>
+  <div id="grid-filters" class="quick-filters">
+    <button id="f-all" class="filter-btn active" onclick="setQuickFilter('all')">Todos</button>
+    <button id="f-avail" class="filter-btn" onclick="setQuickFilter('available')">Disponíveis</button>
+    <button id="f-sold" class="filter-btn" onclick="setQuickFilter('sold')">Vendidos</button>
+  </div>
+</div>
+
+<div id="grid-view" class="grid-container">
+  <div id="numbers-grid" class="grid"></div>
+</div>
+
+<div id="admin-view" class="admin-view">
+  <div class="admin-card">
+    <h3>Lista de Compradores Ativos</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Número</th><th>Nome do Comprador</th><th>Telefone / Contato</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="admin-table-body">
+          <tr><td colspan="4" style="text-align: center; color: #6a7a70; padding: 30px;">Nenhum número vendido ainda.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="raffle-view" class="raffle-view">
+  <div class="raffle-container">
+    <h3>⚽ Sorteador Oficial Digital 🏆</h3>
+    <p style="color: var(--muted); font-size: 0.85rem; margin-top: 5px;">O sistema selecionará de forma aleatória apenas um número entre os <b style="color: var(--gold)" id="raffle-count-text">0</b> números vendidos.</p>
+    <div id="display-drawn-num" class="display-drawn">---</div>
+    <button id="btn-start-raffle" class="btn-prime" style="max-width: 250px;" onclick="triggerRaffle()">Girar Roleta e Sortear</button>
+    <div id="winner-box" class="winner-box">
+      <h4>🏆 Ganhador Encontrado!</h4>
+      <p style="font-size: 1.1rem;" id="winner-name">Nome: ---</p>
+      <p style="font-size: 0.9rem; color: var(--muted); margin-top: 3px;" id="winner-phone">Contato: ---</p>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2 id="modal-title">Número #000</h2>
+    <div id="modal-subtitle" class="modal-subtitle">Configure a situação deste número abaixo</div>
+    <div class="form-group">
+      <label for="buyer-name">Nome do Comprador</label>
+      <input type="text" id="buyer-name" class="form-control" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-group">
+      <label for="buyer-phone">Telefone de Contato</label>
+      <input type="text" id="buyer-phone" class="form-control" placeholder="Ex: 11999999999" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    </div>
+    <div class="form-group" id="extra-numbers-group">
+      <label for="extra-numbers">Vincular outros números (Opcional)</label>
+      <input type="text" id="extra-numbers" class="form-control" placeholder="Ex: 005, 012, 150" oninput="this.value = this.value.replace(/[^0-9, ]/g, '')">
+      <small style="color: var(--muted); font-size: 0.75rem; display: block; margin-top: 4px;">Separe os números extras por vírgula para cadastrar todos juntos.</small>
+    </div>
+    <div class="modal-buttons">
+      <button id="btn-save" class="btn-prime" onclick="saveNumberData()">Salvar Reserva</button>
+      <button id="btn-release" class="btn-sec" onclick="releaseNumberData()" style="display: none;">Liberar Número</button>
+    </div>
+  </div>
+</div>
+
+<footer>Rifa Copa do Mundo &copy; Painel de Controle e Monitoramento em Tempo Real</footer>
+
+<script>
+// =========================================================================
+// CONFIGURAÇÃO DO FIREBASE (sem token secreto — só a URL pública do banco)
+// Veja o passo a passo no arquivo LEIA-ME.txt para criar a sua em 5 minutos.
+// =========================================================================
+const FIREBASE_URL = 'https://rifa-ed274-default-rtdb.firebaseio.com';
+
+// PIN simples para impedir acesso casual ao painel (não é segurança forte,
+// é só uma trava de bom senso — a proteção real é a regra do Firebase).
+const ADMIN_PIN = '1234';
+// =========================================================================
+
+let rifaData = {};
+let activeNumber = null;
+let currentFilter = 'all';
+let activeTab = 'grid';
+let searchQuery = '';
+let exportFileHandle = null;
+
+// ---------- Armazenamento do "atalho" do arquivo local (IndexedDB) ----------
+function openHandleDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('rifa-file-handles', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('handles');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+async function saveHandleToDB(handle) {
+    const db = await openHandleDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(handle, 'dadosTxt');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+}
+async function loadHandleFromDB() {
+    const db = await openHandleDB();
+    return new Promise((resolve) => {
+        const tx = db.transaction('handles', 'readonly');
+        const req = tx.objectStore('handles').get('dadosTxt');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+    });
+}
+
+// Deixa o admin escolher o arquivo dados.txt UMA VEZ (ex: Desktop/Rifa/dados.txt).
+// Depois disso, "Exportar dados.txt" sobrescreve esse mesmo arquivo direto.
+async function chooseExportFile() {
+    if (!window.showSaveFilePicker) {
+        alert('Seu navegador não suporta vincular um arquivo local diretamente (use Chrome ou Edge atualizado). O botão "Exportar" vai continuar baixando um novo arquivo normalmente.');
+        return;
+    }
+    try {
+        const handle = await window.showSaveFilePicker({
+            suggestedName: 'dados.txt',
+            types: [{ description: 'Arquivo de texto', accept: { 'text/plain': ['.txt'] } }]
+        });
+        exportFileHandle = handle;
+        await saveHandleToDB(handle);
+        updateBanner('success', '✅ Arquivo vinculado! A partir de agora, "Exportar dados.txt" vai sobrescrever esse arquivo direto.');
+    } catch (err) {
+        if (err.name !== 'AbortError') console.error(err);
+    }
+}
+
+async function tryRestoreExportFile() {
+    try {
+        const handle = await loadHandleFromDB();
+        if (!handle) return;
+        const perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+            exportFileHandle = handle;
+        } else {
+            // precisa de um clique do usuário pra reconfirmar permissão; guarda o handle e pede no próximo export
+            exportFileHandle = handle;
+        }
+    } catch (err) {
+        console.error('Não foi possível restaurar o arquivo vinculado:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    buildGrid();
+    tryRestoreExportFile();
+
+    if (sessionStorage.getItem('rifa_admin_ok') === 'yes') {
+        document.getElementById('lock-screen').style.display = 'none';
+        loadFromFirebase();
+    }
+
+    document.getElementById('pin-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') checkPin();
+    });
+});
+
+function checkPin() {
+    const val = document.getElementById('pin-input').value;
+    if (val === ADMIN_PIN) {
+        sessionStorage.setItem('rifa_admin_ok', 'yes');
+        document.getElementById('lock-screen').style.display = 'none';
+        loadFromFirebase();
+    } else {
+        document.getElementById('lock-msg').textContent = 'PIN incorreto. Tente novamente.';
+        document.getElementById('pin-input').value = '';
+    }
+}
+
+function buildGrid() {
+    const grid = document.getElementById('numbers-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.createElement('div');
+        card.className = 'num-card';
+        card.id = `card-${numStr}`;
+        card.setAttribute('onclick', `openModal('${numStr}')`);
+
+        const idSpan = document.createElement('span');
+        idSpan.className = 'num-id';
+        idSpan.textContent = numStr;
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'num-status';
+        statusSpan.textContent = 'Livre';
+
+        card.appendChild(idSpan);
+        card.appendChild(statusSpan);
+        grid.appendChild(card);
+    }
+}
+
+function updateBanner(type, text) {
+    const banner = document.getElementById('status-banner');
+    const bannerText = document.getElementById('status-text');
+    banner.className = `status-banner ${type}`;
+    bannerText.textContent = text;
+}
+
+async function loadFromFirebase() {
+    if (FIREBASE_URL.includes('SEU-PROJETO')) {
+        updateBanner('error', '⚠️ Configure a URL do Firebase no topo do script (veja LEIA-ME.txt).');
+        return;
+    }
+    updateBanner('warning', '🔄 Sincronizando dados com o Firebase...');
+    try {
+        const response = await fetch(`${FIREBASE_URL}/rifaData.json`);
+        if (!response.ok) throw new Error(`Erro na API: Status ${response.status}`);
+        const json = await response.json();
+        rifaData = json || {};
+        renderData();
+        localStorage.setItem('local_backup_rifa', JSON.stringify(rifaData));
+        updateBanner('success', '✅ Tudo pronto! Dados sincronizados com o Firebase com sucesso.');
+    } catch (err) {
+        console.error(err);
+        loadLocalFallback();
+        updateBanner('error', '⚠️ Erro ao conectar com o Firebase. Carregando dados locais antigos...');
+    }
+}
+
+// Grava só as chaves alteradas (PATCH), evitando reescrever a rifa inteira.
+async function patchFirebase(patchObj) {
+    if (FIREBASE_URL.includes('SEU-PROJETO')) {
+        updateBanner('error', '⚠️ Configure a URL do Firebase antes de salvar.');
+        return false;
+    }
+    updateBanner('warning', '💾 Gravando alterações...');
+    try {
+        const response = await fetch(`${FIREBASE_URL}/rifaData.json`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patchObj)
+        });
+        if (!response.ok) throw new Error('Erro ao salvar no Firebase.');
+        localStorage.setItem('local_backup_rifa', JSON.stringify(rifaData));
+        updateBanner('success', '✅ Sucesso! Alterações salvas e sincronizadas.');
+        return true;
+    } catch (err) {
+        console.error(err);
+        localStorage.setItem('local_backup_rifa', JSON.stringify(rifaData));
+        updateBanner('error', '❌ Erro ao salvar no Firebase. Verifique sua conexão ou a URL configurada.');
+        return false;
+    }
+}
+
+function loadLocalFallback() {
+    const localData = localStorage.getItem('local_backup_rifa');
+    if (localData) {
+        rifaData = JSON.parse(localData);
+        renderData();
+    }
+}
+
+function forceSync() { loadFromFirebase(); }
+
+async function exportBackupData() {
+    let lines = [];
+    Object.keys(rifaData).sort().forEach(num => {
+        lines.push(`#${num} [${rifaData[num].name}] - cel: ${rifaData[num].phone}`);
+    });
+    const text = lines.join('\n');
+
+    if (exportFileHandle) {
+        try {
+            const perm = await exportFileHandle.requestPermission({ mode: 'readwrite' });
+            if (perm !== 'granted') throw new Error('Permissão negada para gravar no arquivo.');
+            const writable = await exportFileHandle.createWritable();
+            await writable.write(text);
+            await writable.close();
+            updateBanner('success', '✅ dados.txt sobrescrito no arquivo vinculado com sucesso.');
+            return;
+        } catch (err) {
+            console.error(err);
+            updateBanner('error', '⚠️ Não consegui gravar no arquivo vinculado. Baixando uma cópia normal...');
+        }
+    }
+
+    // Fallback: baixa um novo arquivo (primeira vez, ou se o arquivo vinculado falhar)
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `dados.txt`;
+    a.click();
+}
+
+function renderData() {
+    let soldCount = 0;
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.getElementById(`card-${numStr}`);
+        if (!card) continue;
+        const statusSpan = card.querySelector('.num-status');
+        if (rifaData[numStr]) {
+            card.classList.add('sold');
+            statusSpan.textContent = 'Ocupado';
+            soldCount++;
+        } else {
+            card.classList.remove('sold');
+            statusSpan.textContent = 'Livre';
+        }
+    }
+    document.getElementById('stat-sold').textContent = soldCount;
+    document.getElementById('stat-available').textContent = 1000 - soldCount;
+    document.getElementById('raffle-count-text').textContent = soldCount;
+    applyCurrentFiltersAndSearch();
+    renderAdminTable();
+}
+
+function renderAdminTable() {
+    const tbody = document.getElementById('admin-table-body');
+    tbody.innerHTML = '';
+    const soldKeys = Object.keys(rifaData).sort();
+
+    if (soldKeys.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #6a7a70; padding: 30px;">Nenhum número vendido ainda.</td></tr>`;
+        return;
+    }
+
+    soldKeys.forEach(num => {
+        const tr = document.createElement('tr');
+
+        const tdNum = document.createElement('td');
+        tdNum.style.fontFamily = "'Bebas Neue', monospace";
+        tdNum.style.fontWeight = 'bold';
+        tdNum.textContent = num;
+
+        const tdName = document.createElement('td');
+        tdName.textContent = rifaData[num].name;
+
+        const tdPhone = document.createElement('td');
+        tdPhone.textContent = rifaData[num].phone;
+
+        const tdActions = document.createElement('td');
+        tdActions.className = 'actions-cell';
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn-action';
+        btnEdit.textContent = 'Editar';
+        btnEdit.setAttribute('onclick', `openModal('${num}')`);
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-action danger';
+        btnDel.textContent = 'Liberar';
+        btnDel.setAttribute('onclick', `directRelease('${num}')`);
+
+        tdActions.appendChild(btnEdit);
+        tdActions.appendChild(btnDel);
+
+        tr.appendChild(tdNum);
+        tr.appendChild(tdName);
+        tr.appendChild(tdPhone);
+        tr.appendChild(tdActions);
+        tbody.appendChild(tr);
+    });
+}
+
+function openModal(numStr) {
+    activeNumber = numStr;
+    document.getElementById('modal-title').textContent = `Número #${numStr}`;
+
+    const nameInp = document.getElementById('buyer-name');
+    const phoneInp = document.getElementById('buyer-phone');
+    const extraInp = document.getElementById('extra-numbers');
+    const extraGroup = document.getElementById('extra-numbers-group');
+    const btnRel = document.getElementById('btn-release');
+
+    extraInp.value = '';
+
+    if (rifaData[numStr]) {
+        nameInp.value = rifaData[numStr].name;
+        phoneInp.value = rifaData[numStr].phone;
+        btnRel.style.display = 'block';
+        extraGroup.style.display = 'none';
+        document.getElementById('modal-subtitle').textContent = 'Edite ou remova as credenciais deste número';
+    } else {
+        nameInp.value = '';
+        phoneInp.value = '';
+        btnRel.style.display = 'none';
+        extraGroup.style.display = 'block';
+        document.getElementById('modal-subtitle').textContent = 'Preencha os campos para fechar a venda do número';
+    }
+
+    document.getElementById('overlay').classList.add('active');
+}
+
+function closeModal() {
+    document.getElementById('overlay').classList.remove('active');
+    activeNumber = null;
+}
+
+async function saveNumberData() {
+    if (!activeNumber) return;
+    const name = document.getElementById('buyer-name').value.trim();
+    const phone = document.getElementById('buyer-phone').value.trim();
+    const extraNumbersRaw = document.getElementById('extra-numbers').value.trim();
+
+    if (!name) { alert('Por favor, informe o nome do comprador.'); return; }
+
+    let numerosOcupados = [];
+    let extrasParaAdicionar = [];
+
+    if (extraNumbersRaw) {
+        const extraNums = extraNumbersRaw.split(',').map(n => n.trim());
+        extraNums.forEach(num => {
+            if (num === '') return;
+            let formattedNum = num;
+            if (/^\d+$/.test(num)) formattedNum = String(num).padStart(3, '0');
+            const numInt = parseInt(formattedNum, 10);
+            if (numInt >= 0 && numInt <= 999 && formattedNum.length === 3) {
+                if (rifaData[formattedNum] && formattedNum !== activeNumber) {
+                    numerosOcupados.push(formattedNum);
+                } else {
+                    extrasParaAdicionar.push(formattedNum);
+                }
+            }
+        });
+    }
+
+    if (numerosOcupados.length > 0) {
+        alert(`Atenção! Os seguintes números já estão vendidos e NÃO foram alterados: ${numerosOcupados.join(', ')}.\n\nPor favor, remova-os da lista para prosseguir.`);
+        return;
+    }
+
+    const entry = { name: name, phone: phone || 'Não Informado' };
+    const patch = { [activeNumber]: entry };
+    rifaData[activeNumber] = entry;
+
+    extrasParaAdicionar.forEach(num => {
+        rifaData[num] = entry;
+        patch[num] = entry;
+    });
+
+    closeModal();
+    renderData();
+    await patchFirebase(patch);
+}
+
+async function releaseNumberData() {
+    if (!activeNumber) return;
+    if (confirm(`Deseja realmente liberar o número #${activeNumber} de volta para a lista de disponíveis?`)) {
+        const num = activeNumber;
+        delete rifaData[num];
+        closeModal();
+        renderData();
+        await patchFirebase({ [num]: null });
+    }
+}
+
+async function directRelease(num) {
+    if (confirm(`Deseja liberar imediatamente o número #${num}?`)) {
+        delete rifaData[num];
+        renderData();
+        await patchFirebase({ [num]: null });
+    }
+}
+
+function setQuickFilter(mode) {
+    currentFilter = mode;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (mode === 'all') document.getElementById('f-all').classList.add('active');
+    if (mode === 'available') document.getElementById('f-avail').classList.add('active');
+    if (mode === 'sold') document.getElementById('f-sold').classList.add('active');
+    applyCurrentFiltersAndSearch();
+}
+
+function handleSearch() {
+    searchQuery = document.getElementById('search-box').value.toLowerCase().trim();
+    applyCurrentFiltersAndSearch();
+}
+
+function applyCurrentFiltersAndSearch() {
+    const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
+
+    for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const card = document.getElementById(`card-${numStr}`);
+        if (!card) continue;
+
+        const isSold = !!rifaData[numStr];
+        const name = isSold ? rifaData[numStr].name.toLowerCase() : '';
+
+        let matchesFilter = true;
+        if (currentFilter === 'available' && isSold) matchesFilter = false;
+        if (currentFilter === 'sold' && !isSold) matchesFilter = false;
+
+        let matchesRadio = true;
+        if (searchMode === 'available' && isSold) matchesRadio = false;
+        if (searchMode === 'sold' && !isSold) matchesRadio = false;
+
+        let matchesSearch = true;
+        if (searchQuery) {
+            const matchesNum = numStr.includes(searchQuery);
+            const matchesName = name.includes(searchQuery);
+            matchesSearch = (matchesNum || matchesName);
+        }
+
+        card.style.display = (matchesFilter && matchesRadio && matchesSearch) ? 'flex' : 'none';
+    }
+}
+
+function switchView(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('grid-view').style.display = 'none';
+    document.getElementById('admin-view').style.display = 'none';
+    document.getElementById('raffle-view').style.display = 'none';
+    document.getElementById('search-container-wrapper').style.display = 'none';
+    document.getElementById('grid-filters').style.display = 'none';
+
+    if (tab === 'grid') {
+        document.getElementById('tab-grid').classList.add('active');
+        document.getElementById('grid-view').style.display = 'block';
+        document.getElementById('search-container-wrapper').style.display = 'flex';
+        document.getElementById('grid-filters').style.display = 'flex';
+    } else if (tab === 'admin') {
+        document.getElementById('tab-admin').classList.add('active');
+        document.getElementById('admin-view').style.display = 'block';
+    } else if (tab === 'raffle') {
+        document.getElementById('tab-raffle').classList.add('active');
+        document.getElementById('raffle-view').style.display = 'block';
+    }
+}
+
+function triggerRaffle() {
+    const soldKeys = Object.keys(rifaData);
+    if (soldKeys.length === 0) {
+        alert('Não há nenhum número vendido para ser sorteado!');
+        return;
+    }
+
+    const display = document.getElementById('display-drawn-num');
+    const btn = document.getElementById('btn-start-raffle');
+    const winnerBox = document.getElementById('winner-box');
+
+    btn.disabled = true;
+    winnerBox.style.display = 'none';
+    display.classList.add('spinning');
+
+    let counter = 0;
+    const interval = setInterval(() => {
+        const randomIdx = Math.floor(Math.random() * soldKeys.length);
+        display.textContent = soldKeys[randomIdx];
+        counter++;
+        if (counter > 20) {
+            clearInterval(interval);
+            display.classList.remove('spinning');
+
+            const finalWinnerNum = soldKeys[Math.floor(Math.random() * soldKeys.length)];
+            display.textContent = finalWinnerNum;
+
+            document.getElementById('winner-name').textContent = `Nome: ${rifaData[finalWinnerNum].name}`;
+            document.getElementById('winner-phone').textContent = `Contato: ${rifaData[finalWinnerNum].phone}`;
+            winnerBox.style.display = 'block';
+            btn.disabled = false;
+        }
+    }, 100);
+}
+</script>
+</body>
+</html>
