@@ -132,9 +132,9 @@
 </header>
 
 <div class="controls">
-  <div class="stat-item"><div id="stat-total" class="stat-val">1000</div><div class="stat-lbl">Números</div></div>
+  <div class="stat-item"><div id="stat-total" class="stat-val">500</div><div class="stat-lbl">Números</div></div>
   <div class="stat-item"><div id="stat-sold" class="stat-val">0</div><div class="stat-lbl">Reservados</div></div>
-  <div class="stat-item"><div id="stat-available" class="stat-val">1000</div><div class="stat-lbl">Disponíveis</div></div>
+  <div class="stat-item"><div id="stat-available" class="stat-val">500</div><div class="stat-lbl">Disponíveis</div></div>
 </div>
 
 <div id="sync-note" class="sync-note">Conectando...</div>
@@ -173,25 +173,21 @@
 <footer>Rifa Copa do Mundo &copy; Atualizado em Tempo Real</footer>
 
 <script>
-// =========================================================================
-// CONFIGURAÇÃO DO FIREBASE (sem token secreto — só a URL pública do banco)
-// Veja o passo a passo no arquivo LEIA-ME.txt para criar a sua em 5 minutos.
-// =========================================================================
 const FIREBASE_URL = 'https://rifa-ed274-default-rtdb.firebaseio.com';
-// =========================================================================
+const TOTAL_NUMBERS = 500;
 
 let rifaData = {};
 
 document.addEventListener('DOMContentLoaded', () => {
     buildGrid();
     loadFromFirebase();
-    setInterval(loadFromFirebase, 15000); // atualiza sozinho a cada 15s
+    setInterval(loadFromFirebase, 15000);
 });
 
 function buildGrid() {
     const grid = document.getElementById('numbers-grid');
     grid.innerHTML = '';
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.createElement('div');
         card.className = 'num-card';
@@ -238,7 +234,7 @@ async function loadFromFirebase() {
 
 function renderData() {
     let soldCount = 0;
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.getElementById(`card-${numStr}`);
         if (!card) continue;
@@ -253,7 +249,7 @@ function renderData() {
         }
     }
     document.getElementById('stat-sold').textContent = soldCount;
-    document.getElementById('stat-available').textContent = 1000 - soldCount;
+    document.getElementById('stat-available').textContent = TOTAL_NUMBERS - soldCount;
     handleSearch();
 }
 
@@ -261,7 +257,7 @@ function handleSearch() {
     const searchVal = document.getElementById('search-box').value.toLowerCase().trim();
     const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.getElementById(`card-${numStr}`);
         if (!card) continue;
