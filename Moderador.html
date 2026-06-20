@@ -156,7 +156,6 @@
   .btn-sec { flex: 1; background: transparent; color: var(--muted); border: 1px solid rgba(255,215,0,0.3); padding: 12px; font-weight: 500; border-radius: 4px; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; }
   .btn-sec:hover { border-color: var(--gold); color: var(--cream); }
 
-  /* Tela de bloqueio (PIN) */
   #lock-screen {
     position: fixed; inset: 0; background: var(--pitch-dark); z-index: 2000;
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
@@ -181,7 +180,7 @@
 <header>
   <p class="eyebrow">Painel de Controle</p>
   <h1>🏆 Rifa <span class="accent">Copa do Mundo</span> ⚽</h1>
-  <div class="subtitle">Mil números, um sorteio. Gerencie vendas e realize o sorteio oficial.</div>
+  <div class="subtitle">Quinhentos números, um sorteio. Gerencie vendas e realize o sorteio oficial.</div>
 </header>
 
 <div class="storage-box">
@@ -196,9 +195,9 @@
 </div>
 
 <div class="controls">
-  <div class="stat-item"><div id="stat-total" class="stat-val">1000</div><div class="stat-lbl">Números</div></div>
+  <div class="stat-item"><div id="stat-total" class="stat-val">500</div><div class="stat-lbl">Números</div></div>
   <div class="stat-item"><div id="stat-sold" class="stat-val">0</div><div class="stat-lbl">Vendidos</div></div>
-  <div class="stat-item"><div id="stat-available" class="stat-val">1000</div><div class="stat-lbl">Disponíveis</div></div>
+  <div class="stat-item"><div id="stat-available" class="stat-val">500</div><div class="stat-lbl">Disponíveis</div></div>
 </div>
 
 <div id="search-container-wrapper" class="search-container">
@@ -285,16 +284,9 @@
 <footer>Rifa Copa do Mundo &copy; Painel de Controle e Monitoramento em Tempo Real</footer>
 
 <script>
-// =========================================================================
-// CONFIGURAÇÃO DO FIREBASE (sem token secreto — só a URL pública do banco)
-// Veja o passo a passo no arquivo LEIA-ME.txt para criar a sua em 5 minutos.
-// =========================================================================
 const FIREBASE_URL = 'https://rifa-ed274-default-rtdb.firebaseio.com';
-
-// PIN simples para impedir acesso casual ao painel (não é segurança forte,
-// é só uma trava de bom senso — a proteção real é a regra do Firebase).
+const TOTAL_NUMBERS = 500;
 const ADMIN_PIN = '1234';
-// =========================================================================
 
 let rifaData = {};
 let activeNumber = null;
@@ -303,7 +295,6 @@ let activeTab = 'grid';
 let searchQuery = '';
 let exportFileHandle = null;
 
-// ---------- Armazenamento do "atalho" do arquivo local (IndexedDB) ----------
 function openHandleDB() {
     return new Promise((resolve, reject) => {
         const req = indexedDB.open('rifa-file-handles', 1);
@@ -331,8 +322,6 @@ async function loadHandleFromDB() {
     });
 }
 
-// Deixa o admin escolher o arquivo dados.txt UMA VEZ (ex: Desktop/Rifa/dados.txt).
-// Depois disso, "Exportar dados.txt" sobrescreve esse mesmo arquivo direto.
 async function chooseExportFile() {
     if (!window.showSaveFilePicker) {
         alert('Seu navegador não suporta vincular um arquivo local diretamente (use Chrome ou Edge atualizado). O botão "Exportar" vai continuar baixando um novo arquivo normalmente.');
@@ -359,7 +348,6 @@ async function tryRestoreExportFile() {
         if (perm === 'granted') {
             exportFileHandle = handle;
         } else {
-            // precisa de um clique do usuário pra reconfirmar permissão; guarda o handle e pede no próximo export
             exportFileHandle = handle;
         }
     } catch (err) {
@@ -396,7 +384,7 @@ function checkPin() {
 function buildGrid() {
     const grid = document.getElementById('numbers-grid');
     grid.innerHTML = '';
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.createElement('div');
         card.className = 'num-card';
@@ -445,7 +433,6 @@ async function loadFromFirebase() {
     }
 }
 
-// Grava só as chaves alteradas (PATCH), evitando reescrever a rifa inteira.
 async function patchFirebase(patchObj) {
     if (FIREBASE_URL.includes('SEU-PROJETO')) {
         updateBanner('error', '⚠️ Configure a URL do Firebase antes de salvar.');
@@ -502,7 +489,6 @@ async function exportBackupData() {
         }
     }
 
-    // Fallback: baixa um novo arquivo (primeira vez, ou se o arquivo vinculado falhar)
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -512,7 +498,7 @@ async function exportBackupData() {
 
 function renderData() {
     let soldCount = 0;
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.getElementById(`card-${numStr}`);
         if (!card) continue;
@@ -527,7 +513,7 @@ function renderData() {
         }
     }
     document.getElementById('stat-sold').textContent = soldCount;
-    document.getElementById('stat-available').textContent = 1000 - soldCount;
+    document.getElementById('stat-available').textContent = TOTAL_NUMBERS - soldCount;
     document.getElementById('raffle-count-text').textContent = soldCount;
     applyCurrentFiltersAndSearch();
     renderAdminTable();
@@ -633,7 +619,7 @@ async function saveNumberData() {
             let formattedNum = num;
             if (/^\d+$/.test(num)) formattedNum = String(num).padStart(3, '0');
             const numInt = parseInt(formattedNum, 10);
-            if (numInt >= 0 && numInt <= 999 && formattedNum.length === 3) {
+            if (numInt >= 0 && numInt <= (TOTAL_NUMBERS - 1) && formattedNum.length === 3) {
                 if (rifaData[formattedNum] && formattedNum !== activeNumber) {
                     numerosOcupados.push(formattedNum);
                 } else {
@@ -698,7 +684,7 @@ function handleSearch() {
 function applyCurrentFiltersAndSearch() {
     const searchMode = document.querySelector('input[name="searchMode"]:checked').value;
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < TOTAL_NUMBERS; i++) {
         const numStr = String(i).padStart(3, '0');
         const card = document.getElementById(`card-${numStr}`);
         if (!card) continue;
